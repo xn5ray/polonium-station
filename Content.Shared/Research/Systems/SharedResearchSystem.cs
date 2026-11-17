@@ -72,11 +72,26 @@ public abstract partial class SharedResearchSystem : EntitySystem
         if (!component.SupportedDisciplines.Contains(tech.Discipline))
             return false;
 
-        if (tech.Tier > disciplineTiers[tech.Discipline])
+        // Polonium: the random research tree has no tier limits, the generated prerequisites set the order
+        if (component.Layout.Count == 0 && tech.Tier > disciplineTiers[tech.Discipline])
             return false;
+        // Polonium end
 
         if (component.UnlockedTechnologies.Contains(tech.ID))
             return false;
+
+        // Polonium: random research tree
+        if (component.Layout.TryGetValue(tech.ID, out var layout))
+        {
+            foreach (var prereq in layout.Prerequisites)
+            {
+                if (!component.UnlockedTechnologies.Contains(prereq))
+                    return false;
+            }
+
+            return true;
+        }
+        // Polonium end
 
         foreach (var prereq in tech.TechnologyPrerequisites)
         {

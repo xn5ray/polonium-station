@@ -1,3 +1,4 @@
+using Content.Shared._Polonium.Research; // Polonium: random research tree
 using Content.Shared.Lathe;
 using Content.Shared.Research.Prototypes;
 using Content.Shared.Research.Systems;
@@ -40,6 +41,16 @@ public sealed partial class TechnologyDatabaseComponent : Component
     [AutoNetworkedField]
     [DataField]
     public List<ProtoId<LatheRecipePrototype>> UnlockedRecipes = new();
+
+    // Polonium: random research tree
+    /// <summary>
+    /// Positions and prerequisites of the technologies in the random tree generated for the research server.
+    /// Consoles get a copy when they are synchronized with the server, the clients get it in the console UI state,
+    /// so it is not networked with the component. When it is empty, the tiers and prerequisites from the
+    /// technology prototypes are used.
+    /// </summary>
+    public Dictionary<string, TechLayoutEntry> Layout = new();
+    // Polonium end
 }
 
 /// <summary>

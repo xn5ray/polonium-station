@@ -1,5 +1,7 @@
+using System.Linq; // Polonium: random research tree
 using Content.Server.Power.EntitySystems;
 using Content.Server.Research.Components;
+using Content.Shared._Polonium.Research; // Polonium: random research tree
 using Content.Shared.UserInterface;
 using Content.Shared.Access.Components;
 using Content.Shared.Emag.Systems;
@@ -72,10 +74,56 @@ public sealed partial class ResearchSystem
 
         ResearchConsoleBoundInterfaceState state;
 
-        if (TryGetClientServer(uid, out _, out var serverComponent, clientComponent))
+        if (TryGetClientServer(uid, out var serverUid, out var serverComponent, clientComponent))
         {
             var points = clientComponent.ConnectedToServer ? serverComponent.Points : 0;
-            state = new ResearchConsoleBoundInterfaceState(points);
+
+            // Polonium: random research tree
+            var researches = new Dictionary<string, ResearchAvailability>();
+            var layout = new Dictionary<string, TechLayoutEntry>();
+            if (TryComp<TechnologyDatabaseComponent>(serverUid, out var serverDatabase))
+            {
+                // Servers created before the tree was generated (e.g. loaded from a saved map) get it here
+                if (serverDatabase.Layout.Count == 0)
+                {
+                    GenerateTechnologyLayout(serverUid.Value, serverDatabase);
+
+                    // The console checks the prerequisites in its own copy of the database. It is updated directly,
+                    // because a full sync would raise this update again.
+                    if (TryComp<TechnologyDatabaseComponent>(uid, out var consoleDatabase))
+                        consoleDatabase.Layout = serverDatabase.Layout;
+                }
+
+                var unlocked = new HashSet<string>();
+                foreach (var technology in serverDatabase.UnlockedTechnologies)
+                {
+                    unlocked.Add(technology.Id);
+                }
+
+                foreach (var (id, entry) in serverDatabase.Layout)
+                {
+                    if (unlocked.Contains(id))
+                    {
+                        researches[id] = ResearchAvailability.Researched;
+                        continue;
+                    }
+
+                    if (!ProtoMan.TryIndex<TechnologyPrototype>(id, out var prototype))
+                        continue;
+
+                    var prerequisitesMet = entry.Prerequisites.All(unlocked.Contains);
+                    var canAfford = serverComponent.Points >= prototype.Cost;
+
+                    researches[id] = prerequisitesMet
+                        ? canAfford ? ResearchAvailability.Available : ResearchAvailability.PrereqsMet
+                        : ResearchAvailability.Unavailable;
+                }
+
+                layout = serverDatabase.Layout;
+            }
+
+            state = new ResearchConsoleBoundInterfaceState(points, researches, layout);
+            // Polonium end
         }
         else
         {

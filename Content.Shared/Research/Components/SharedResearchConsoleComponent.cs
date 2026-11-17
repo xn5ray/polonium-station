@@ -1,3 +1,4 @@
+using Content.Shared._Polonium.Research; // Polonium: random research tree
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.Research.Components
@@ -29,9 +30,27 @@ namespace Content.Shared.Research.Components
     public sealed class ResearchConsoleBoundInterfaceState : BoundUserInterfaceState
     {
         public int Points;
-        public ResearchConsoleBoundInterfaceState(int points)
+
+        // Polonium: random research tree
+        /// <summary>
+        /// Availability of every technology in the tree.
+        /// </summary>
+        public Dictionary<string, ResearchAvailability> Researches;
+
+        /// <summary>
+        /// Position and prerequisites of every technology in the tree.
+        /// </summary>
+        public Dictionary<string, TechLayoutEntry> Layout;
+
+        public ResearchConsoleBoundInterfaceState(
+            int points,
+            Dictionary<string, ResearchAvailability>? researches = null,
+            Dictionary<string, TechLayoutEntry>? layout = null)
         {
             Points = points;
+            Researches = researches ?? new();
+            Layout = layout ?? new();
         }
+        // Polonium end
     }
 }

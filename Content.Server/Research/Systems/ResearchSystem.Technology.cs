@@ -21,6 +21,7 @@ public sealed partial class ResearchSystem
         primaryDb.SupportedDisciplines = otherDb.SupportedDisciplines;
         primaryDb.UnlockedTechnologies = otherDb.UnlockedTechnologies;
         primaryDb.UnlockedRecipes = otherDb.UnlockedRecipes;
+        primaryDb.Layout = otherDb.Layout; // Polonium: random research tree
 
         Dirty(primaryUid, primaryDb);
 
@@ -169,6 +170,7 @@ public sealed partial class ResearchSystem
         component.SupportedDisciplines = new List<ProtoId<TechDisciplinePrototype>>();
         component.UnlockedTechnologies = new List<ProtoId<TechnologyPrototype>>();
         component.UnlockedRecipes = new List<ProtoId<LatheRecipePrototype>>();
+        component.Layout = new(); // Polonium: random research tree
         Dirty(uid, component);
     }
 }
